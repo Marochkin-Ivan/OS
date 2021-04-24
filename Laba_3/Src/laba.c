@@ -12,16 +12,16 @@ typedef struct {
     long long tries_count; 
     int rad;
     long long circle_points; 
-    int idx;
+    long long idx;
 } pthread_Data;
 
 // потоковая функция:
 void* ThreadFunction(void* thread_data){
     srand(time(NULL));
     pthread_Data* data = (pthread_Data*) thread_data;
-    printf("Running thread number %d. Count of tries = %lld Wait...\n", data->idx + 1, data->tries_count);
+//    printf("Running thread number %d. Count of tries = %lld Wait...\n", data->idx + 1, data->tries_count);
     double x, y;
-    for (int i = 0; i < data->tries_count; ++i){
+    for (long long i = 0; i < data->tries_count; ++i){
         x = (double)rand() / (double)RAND_MAX * (2*data->rad) - data->rad;
         y = (double)rand() / (double)RAND_MAX * (2*data->rad) - data->rad;
         if ((x*x + y*y) <= data->rad*data->rad){
@@ -48,7 +48,7 @@ int main(int argc, char* argv[]){
     }
 
     long long all_tries = atoll(argv[2]);
-    if (thr_count < 1){
+    if (all_tries < 1){
         perror("ERROR: invalid second argument");
         exit(-3);
     }
@@ -66,10 +66,10 @@ int main(int argc, char* argv[]){
     pthread_Data* threadData = (pthread_Data*) malloc(thr_count * sizeof(pthread_Data));
     pthread_mutex_init(&mutex, NULL);
 
-    long long begin_time = time(NULL); // запускаем таймер работы программы
+    clock_t begin_time = clock(); // запускаем таймер работы программы
 
     // присваиваем нужные значения данным и запускаем потоки:
-    for (int i = 0; i < thr_count; ++i){
+    for (long long i = 0; i < thr_count; ++i){
         threadData[i].rad = rad;
         threadData[i].idx = i;
         threadData[i].circle_points = 0;
@@ -83,11 +83,11 @@ int main(int argc, char* argv[]){
     }
 
     // ждем завершения всех потоков:
-    for (int i = 0; i < thr_count; ++i){
+    for (long long i = 0; i < thr_count; ++i){
         pthread_join(thread_id[i], NULL);
     }
 
-    long long end_time = time(NULL); // останавливаем таймер работы программы
+    clock_t end_time = clock(); // останавливаем таймер работы программы
 
     printf("S = %f\n", bulls_eye/((double)all_tries) * 2*rad * 2*rad); // выводим результат
 
@@ -95,6 +95,7 @@ int main(int argc, char* argv[]){
     free(threadData);
     pthread_mutex_destroy(&mutex);
     
-    printf("Program running time = %lld\n\n", (end_time - begin_time));
+    printf("Program running time = %f\n\n",
+           (double)(end_time - begin_time) / CLOCKS_PER_SEC);
     return 0;
 }

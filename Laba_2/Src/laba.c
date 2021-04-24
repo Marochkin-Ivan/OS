@@ -117,7 +117,7 @@ int main()
         close(pipe1[0]);
         close(pipe2[0]);
 
-        double num[3];
+        double num[50];
         uint8_t check = 1;
 
         for (int i = 0; i < 3; ++i){
@@ -152,19 +152,25 @@ int main()
         }
 
         // делаем проверку деления на 0:
-        if (num[1] == 0 || num[2] == 0){
-            perror("Can't divide");
-            check = 0;
-            write(pipe2[1], &check, sizeof(uint8_t)); // если возможно деление на 0, отправляем по pipe2 сообщение родительскому процессу и завершаем работу.
-            close(pipe2[1]);
-            exit(-5);
+        for (int j = 1; j < i + 1; ++j){
+            if (num[j] == 0){
+                perror("Can't divide");
+                check = 0;
+                write(pipe2[1], &check, sizeof(uint8_t)); // если возможно деление на 0, отправляем по pipe2 сообщение родительскому процессу и завершаем работу.
+                close(pipe2[1]);
+                exit(-5);
+            }
         }
 
         // если деления на 0 нет, отправляем по pipe2 сообщение родительскому процессу:
         write(pipe2[1], &check, sizeof(uint8_t));
 
         // считаем и отправляем по pipe1 результат родительскому процессу:
-        double res = num[0] / num[1] / num[2];
+        double res = num[0];
+        for (int j = 1; j < i + 1; ++j){
+            res /= num[j];
+        }
+        
         write(pipe1[1], &res, sizeof(double));
 
         close(pipe1[1]);

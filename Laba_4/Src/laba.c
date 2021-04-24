@@ -86,27 +86,34 @@ int main(){
     }
     else if (id == 0){
 
-        double num[3];
+        double num[50];
         Data data;
         data.check = 1;
 
         dup2(commands, 0); // перенаправляем стандартный поток ввода дочернего процесса на открытый файл
 
         // считываем 3 числа типа double из файла:
-        for (int i = 0; i < 3; ++i){
-            scanf("%lf", &num[i]);
+        int i = 0;
+        while(scanf("%lf", &num[i]) != EOF){
+            ++i;
         }
-
+        
+        printf("Count of numbers = %d\n", i);
         // делаем проверку деления на 0:
-        if (num[1] == 0 || num[2] == 0){
-            perror("Can't divide");
-            data.check = 0;
-            write_in_mmapFile(&data, mmapFile); // если возможно деление на 0, отправляем данные родительскому процессу и завершаем работу
-            exit(-5);
+        for (int j = 1; j < i; ++j){
+            if (num[j] == 0){
+                perror("Can't divide");
+                data.check = 0;
+                write_in_mmapFile(&data, mmapFile); // если возможно деление на 0, отправляем данные родительскому процессу и завершаем работу
+                exit(-5);
+            }
         }
 
         // считаем и отправляем данные родительскому процессу:
-        data.result = num[0] / num[1] / num[2];
+        data.result = num[0];
+        for (int j = 1; j < i; ++j){
+            data.result /= num[j];
+        }
         write_in_mmapFile(&data, mmapFile);
     }
     else {
